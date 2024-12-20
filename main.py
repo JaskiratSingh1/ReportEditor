@@ -21,6 +21,7 @@ class ReportEditorFrame(wx.Frame):
         # Layout
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         control_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        modify_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # Text fields for report metadata
         self.report_name_label = wx.StaticText(self.panel, label="Report Name:")
@@ -41,6 +42,13 @@ class ReportEditorFrame(wx.Frame):
         self.reload_button = wx.Button(self.panel, label="Reload from DB")
         self.reload_button.Bind(wx.EVT_BUTTON, self.on_reload_from_db)
 
+        # New buttons for adding rows and columns
+        self.add_row_button = wx.Button(self.panel, label="Add Row")
+        self.add_row_button.Bind(wx.EVT_BUTTON, self.on_add_row)
+
+        self.add_column_button = wx.Button(self.panel, label="Add Column")
+        self.add_column_button.Bind(wx.EVT_BUTTON, self.on_add_column)
+
         # Add controls to sizer
         control_sizer.Add(self.report_name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         control_sizer.Add(self.report_name_text, 0, wx.ALL, 5)
@@ -51,7 +59,11 @@ class ReportEditorFrame(wx.Frame):
         control_sizer.Add(self.save_button, 0, wx.ALL, 5)
         control_sizer.Add(self.reload_button, 0, wx.ALL, 5)
 
+        modify_sizer.Add(self.add_row_button, 0, wx.ALL, 5)
+        modify_sizer.Add(self.add_column_button, 0, wx.ALL, 5)
+
         main_sizer.Add(control_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(modify_sizer, 0, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(self.grid, 1, wx.EXPAND | wx.ALL, 5)
 
         self.panel.SetSizer(main_sizer)
@@ -96,6 +108,13 @@ class ReportEditorFrame(wx.Frame):
         report_date = self.report_date_text.GetValue()
         df = self.controller.get_dataframe()
 
+        # If DataFrame doesn't have the required columns, warn the user.
+        required_cols = {'Name', 'Role', 'Department'}
+        if not required_cols.issubset(set(df.columns)):
+            wx.MessageBox("Cannot save to DB. DataFrame missing required columns (Name, Role, Department).", 
+                          "Error", wx.OK | wx.ICON_ERROR)
+            return
+
         # Convert DataFrame rows into tuples for DB insertion
         records = [tuple(row) for row in df[['Name', 'Role', 'Department']].to_records(index=False)]
         self.db.insert_report_data(report_name, report_date, records)
@@ -116,6 +135,35 @@ class ReportEditorFrame(wx.Frame):
             wx.MessageBox("Data reloaded from DB!", "Info", wx.OK | wx.ICON_INFORMATION)
         else:
             wx.MessageBox("No data found in the database.", "Info", wx.OK | wx.ICON_INFORMATION)
+
+    def on_add_row(self, event):
+        """Add a new blank row to the current DataFrame."""
+        df = self.controller.get_dataframe()
+        if df.empty:
+            # If empty, let's create a default set of columns for demonstration
+            df = pd.DataFrame(columns=['Name', 'Role', 'Department'])
+        
+        # Add a blank row (fill with empty strings or placeholders)
+        new_row = {col: "" for col in df.columns}
+        new_df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        self.controller.update_dataframe(new_df)
+        self.populate_grid_from_dataframe(new_df)
+
+    def on_add_column(self, event):
+        """Prompt for a new column name and add it to the DataFrame."""
+        dlg = wx.TextEntryDialog(self, "Enter the new column name:", "Add Column")
+        if dlg.ShowModal() == wx.ID_OK:
+            new_col_name = dlg.GetValue().strip()
+            if new_col_name:
+                df = self.controller.get_dataframe()
+                if new_col_name in df.columns:
+                    wx.MessageBox("Column already exists. Please choose a different name.", "Error", wx.OK | wx.ICON_ERROR)
+                else:
+                    # Add the new column with empty strings
+                    df[new_col_name] = ""
+                    self.controller.update_dataframe(df)
+                    self.populate_grid_from_dataframe(df)
+        dlg.Destroy()
 
     def populate_grid_from_dataframe(self, df):
         """Clear the grid and populate it with DataFrame data."""
