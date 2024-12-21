@@ -1,21 +1,49 @@
 # ReportEditor
 
-**ReportEditor** is a sample Python-based application showcasing the integration of a graphical user interface (GUI) into an existing report-editing workflow. By moving away from command-line operations, this demo highlights how a user-friendly, visually intuitive interface can streamline processes and improve overall efficiency.
+**ReportEditor** is a Python-based application showcasing the integration of a graphical user interface (GUI) into an existing report-editing workflow. This project demonstrates how a user-friendly, visually intuitive interface can streamline processes and reduce reliance on command-line operations.
 
 ## Key Features
 
-- **GUI Integration (wxPython):** Demonstrates the creation of a clean, accessible interface, removing the need for command-line interactions.
-- **Data Manipulation (Pandas):** Utilizes Pandas for data handling, ensuring smooth data processing and preparation steps.
-- **Database Interaction (SQL):** Illustrates the potential for SQL integration to manage persistent data storage.
-- **Code Quality & Style:** Emphasizes best programming practices, including clear structure, meaningful variable names, and well-organized code.
+- **Dynamic GUI (wxPython):**
+  - A responsive GUI that adjusts dynamically as the window is resized, ensuring usability across various screen sizes.
+  - Wrap-around buttons and controls that reorganize themselves when the window width is reduced.
+- **Data Manipulation (Pandas):**
+  - Efficient loading, editing, and processing of CSV data using Pandas.
+  - Features for adding rows and columns dynamically to the loaded dataset.
+- **Database Interaction (SQLite):**
+  - Seamless integration with an SQLite database for saving and retrieving reports.
+  - Persistent data storage ensures that reports can be reloaded and modified across application sessions.
+- **Report Customization:**
+  - Editable fields for report metadata, including "Report Name" and "Report Date."
+  - Real-time updates to the displayed dataset after processing or user interactions.
+- **Code Quality & Style:**
+  - Clear structure, meaningful variable names, and organized code for maintainability and scalability.
+
+## How It Works
+
+1. **Load Data:**
+   - Use the "Load CSV" button to select a CSV file containing report data.
+2. **Edit Data:**
+   - Add rows or columns dynamically using the respective buttons.
+   - Modify "Report Name" and "Report Date" directly in the provided text fields.
+3. **Generate Report:**
+   - Use the "Generate Report" button to process and display the data in a clean, sorted format.
+4. **Save Data:**
+   - Save the report (with metadata and table content) to an SQLite database using the "Save to DB" button.
+5. **Reload Data:**
+   - Retrieve and view previously saved reports using the "Reload from DB" button.
 
 ## Future Enhancements
 
 Should this concept proceed beyond the demo stage, the following improvements may be implemented:
 
-- **Design Guidelines:** Adhering to formal UI/UX standards for a polished, professional look and feel.
-- **Version Control (Git):** Leveraging version control for efficient collaboration, branch management, and change tracking.
-- **RESTful APIs:** Incorporating API integrations to further extend the tool’s functionality and interoperability.
-- **Automated Testing (pytest):** Implementing testing frameworks for reliable, maintainable, and bug-free releases.
+- **Enhanced Design:**
+  - Adopting formal UI/UX guidelines for a polished, professional interface.
+- **API Integration:**
+  - Adding RESTful API support to enable seamless data exchange and extended functionality.
+- **Automated Testing:**
+  - Implementing unit tests with frameworks like `pytest` to ensure robust, maintainable code.
+- **Version Control:**
+  - Leveraging Git for efficient collaboration, branch management, and change tracking.
 
-**Note:** This project is a sample demonstration of coding style, tooling, and process. If selected, these methodologies will be adapted and refined to meet the specific requirements of the actual project.
+**Note:** This project is a proof of concept to demonstrate coding practices, GUI design, and data handling workflows. Additional features and refinements can be tailored to meet the specific requirements of a full-scale implementation.

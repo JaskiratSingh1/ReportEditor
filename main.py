@@ -3,11 +3,14 @@ import wx.grid as gridlib
 import pandas as pd
 import os
 
+# Local imports
 from database import DatabaseHandler
 from report_controller import ReportController
 
+# Main frame for the application
 class ReportEditorFrame(wx.Frame):
     def __init__(self, parent, title="ReportEditor"):
+        # Set the initial window size to 1000x700 pixels for optimal viewing
         super().__init__(parent, title=title, size=(1000, 700))
         
         # Components
@@ -15,55 +18,62 @@ class ReportEditorFrame(wx.Frame):
         self.grid = gridlib.Grid(self.panel)
         self.grid.CreateGrid(0, 0)
 
+        # Data handlers
         self.db = DatabaseHandler()
         self.controller = ReportController()
 
         # Layout
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-        control_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        modify_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Text fields for report metadata
+        # Use a WrapSizer so that controls wrap to a new line when width is reduced
+        wrap_sizer = wx.WrapSizer(wx.HORIZONTAL, wx.WRAPSIZER_DEFAULT_FLAGS)
+
+        # Text fields for report name
         self.report_name_label = wx.StaticText(self.panel, label="Report Name:")
         self.report_name_text = wx.TextCtrl(self.panel, value="My Report")
 
+        # Text fields for report date
         self.report_date_label = wx.StaticText(self.panel, label="Report Date (YYYY-MM-DD):")
         self.report_date_text = wx.TextCtrl(self.panel, value="2024-01-01")
 
+        # Button for loading data
         self.load_button = wx.Button(self.panel, label="Load CSV")
         self.load_button.Bind(wx.EVT_BUTTON, self.on_load_csv)
 
+        # Button for report generation
         self.generate_button = wx.Button(self.panel, label="Generate Report")
         self.generate_button.Bind(wx.EVT_BUTTON, self.on_generate_report)
 
+        # Buttons for saving data
         self.save_button = wx.Button(self.panel, label="Save to DB")
         self.save_button.Bind(wx.EVT_BUTTON, self.on_save_to_db)
 
+        # Button for reloading data
         self.reload_button = wx.Button(self.panel, label="Reload from DB")
         self.reload_button.Bind(wx.EVT_BUTTON, self.on_reload_from_db)
 
-        # New buttons for adding rows and columns
+        # Button for adding rows
         self.add_row_button = wx.Button(self.panel, label="Add Row")
         self.add_row_button.Bind(wx.EVT_BUTTON, self.on_add_row)
 
+        # Button for adding columns
         self.add_column_button = wx.Button(self.panel, label="Add Column")
         self.add_column_button.Bind(wx.EVT_BUTTON, self.on_add_column)
 
-        # Add controls to sizer
-        control_sizer.Add(self.report_name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        control_sizer.Add(self.report_name_text, 0, wx.ALL, 5)
-        control_sizer.Add(self.report_date_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        control_sizer.Add(self.report_date_text, 0, wx.ALL, 5)
-        control_sizer.Add(self.load_button, 0, wx.ALL, 5)
-        control_sizer.Add(self.generate_button, 0, wx.ALL, 5)
-        control_sizer.Add(self.save_button, 0, wx.ALL, 5)
-        control_sizer.Add(self.reload_button, 0, wx.ALL, 5)
+        # All controls that should wrap to the wrap_sizer
+        wrap_sizer.Add(self.report_name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        wrap_sizer.Add(self.report_name_text, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.report_date_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        wrap_sizer.Add(self.report_date_text, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.load_button, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.generate_button, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.save_button, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.reload_button, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.add_row_button, 0, wx.ALL, 5)
+        wrap_sizer.Add(self.add_column_button, 0, wx.ALL, 5)
 
-        modify_sizer.Add(self.add_row_button, 0, wx.ALL, 5)
-        modify_sizer.Add(self.add_column_button, 0, wx.ALL, 5)
-
-        main_sizer.Add(control_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(modify_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        # Give the grid a proportion of 1 so it expands when the window is resized
+        main_sizer.Add(wrap_sizer, 0, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(self.grid, 1, wx.EXPAND | wx.ALL, 5)
 
         self.panel.SetSizer(main_sizer)
@@ -76,21 +86,33 @@ class ReportEditorFrame(wx.Frame):
         self.SetMenuBar(menu_bar)
         self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
 
+        # Fit the layout to the content and allow dynamic resizing
+        self.Layout()
+        self.SetMinSize((600, 400)) # Minimum size to prevent clipping
+        self.Centre()
+
+    # Exit the application
     def on_exit(self, event):
         self.Close()
 
+    """Load data from a CSV file into the DataFrame"""
     def on_load_csv(self, event):
         with wx.FileDialog(self, "Open CSV", wildcard="CSV files (*.csv)|*.csv",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
+            
+            # If the user cancels the dialog, return early
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return  # User canceled
             path = file_dialog.GetPath()
+
+            # Load the CSV file into the DataFrame
             if os.path.exists(path):
                 self.controller.load_from_csv(path)
                 self.populate_grid_from_dataframe(self.controller.get_dataframe())
 
+    """Generate a processed report from the current DataFrame"""
     def on_generate_report(self, event):
-        """Generate a processed report from the current DataFrame."""
+        # Get the report metadata from the text fields
         report_name = self.report_name_text.GetValue()
         report_date = self.report_date_text.GetValue()
         try:
@@ -102,8 +124,9 @@ class ReportEditorFrame(wx.Frame):
         except Exception as e:
             wx.MessageBox(str(e), "Error", wx.OK | wx.ICON_ERROR)
 
+    """Save the current report data into the database"""
     def on_save_to_db(self, event):
-        """Save the current report data into the database."""
+        # Get the report metadata from the text fields
         report_name = self.report_name_text.GetValue()
         report_date = self.report_date_text.GetValue()
         df = self.controller.get_dataframe()
@@ -120,8 +143,9 @@ class ReportEditorFrame(wx.Frame):
         self.db.insert_report_data(report_name, report_date, records)
         wx.MessageBox("Report saved to the database!", "Info", wx.OK | wx.ICON_INFORMATION)
 
+    """Reload the data from the database to verify round-trip and updates"""
     def on_reload_from_db(self, event):
-        """Reload the data from the database to verify round-trip and updates."""
+        # Load data from the database
         report_name, report_date, records = self.db.load_report_data()
         if records:
             # Update metadata fields
@@ -136,21 +160,22 @@ class ReportEditorFrame(wx.Frame):
         else:
             wx.MessageBox("No data found in the database.", "Info", wx.OK | wx.ICON_INFORMATION)
 
+    """Add a new blank row to the current DataFrame"""
     def on_add_row(self, event):
-        """Add a new blank row to the current DataFrame."""
         df = self.controller.get_dataframe()
         if df.empty:
-            # If empty, let's create a default set of columns for demonstration
+            # If empty, create a default set of columns for demonstration
             df = pd.DataFrame(columns=['Name', 'Role', 'Department'])
         
-        # Add a blank row (fill with empty strings or placeholders)
+        # Add a blank row
         new_row = {col: "" for col in df.columns}
         new_df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         self.controller.update_dataframe(new_df)
         self.populate_grid_from_dataframe(new_df)
 
+    """Prompt for a new column name and add it to the DataFrame"""
     def on_add_column(self, event):
-        """Prompt for a new column name and add it to the DataFrame."""
+        # Prompt for a new column name
         dlg = wx.TextEntryDialog(self, "Enter the new column name:", "Add Column")
         if dlg.ShowModal() == wx.ID_OK:
             new_col_name = dlg.GetValue().strip()
@@ -165,11 +190,12 @@ class ReportEditorFrame(wx.Frame):
                     self.populate_grid_from_dataframe(df)
         dlg.Destroy()
 
+    """Clear the grid and populate it with DataFrame data"""
     def populate_grid_from_dataframe(self, df):
-        """Clear the grid and populate it with DataFrame data."""
         existing_rows = self.grid.GetNumberRows()
         existing_cols = self.grid.GetNumberCols()
 
+        # Clear the grid
         if existing_cols > 0:
             self.grid.DeleteCols(pos=0, numCols=existing_cols, updateLabels=True)
         if existing_rows > 0:
@@ -178,6 +204,7 @@ class ReportEditorFrame(wx.Frame):
         if df.empty:
             return
 
+        # Add rows and columns to the grid
         self.grid.AppendCols(len(df.columns))
         self.grid.AppendRows(len(df.index))
 
