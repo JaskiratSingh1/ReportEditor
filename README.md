@@ -39,11 +39,7 @@ Should this concept proceed beyond the demo stage, the following improvements ma
 
 - **Enhanced Design:**
   - Adopting formal UI/UX guidelines for a polished, professional interface.
-- **API Integration:**
-  - Adding RESTful API support to enable seamless data exchange and extended functionality.
 - **Automated Testing:**
   - Implementing unit tests with frameworks like `pytest` to ensure robust, maintainable code.
-- **Version Control:**
-  - Leveraging Git for efficient collaboration, branch management, and change tracking.
 
 **Note:** This project is a proof of concept to demonstrate coding practices, GUI design, and data handling workflows. Additional features and refinements can be tailored to meet the specific requirements of a full-scale implementation.
